@@ -1,0 +1,3 @@
+Beeping 5 times and staying on LED means the device is ready to be set up. In case it was setted up it means that it failed to connect to WiFi and you need to set up again.
+
+One beep and constant LED means the device is booting up. If the LED turns off without beeping it means the device is connected and ready to be used.
