@@ -47,7 +47,7 @@ void setup() {
   }
   pinMode(BootLED, OUTPUT);
   delay(100);
-  digitalWrite(BootLED, HIGH);
+  digitalWrite(BootLED, LOW);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(user_wifi.ssid, user_wifi.password);
@@ -174,6 +174,44 @@ void loop() {
   }
   server.handleClient();
   webSocket.loop();
+
+  if (Serial.available()) {
+    String command = Serial.readStringUntil('\n');  // Citește comanda până la newline
+    command.trim();  // Elimină eventualele spații albe
+    if (command == "admingetip") {
+      Serial.print("IP curent: ");
+      Serial.println(WiFi.localIP());
+    }
+    else if (command == "sudo reboot") {
+      Serial.println("Restart ESP...");
+      delay(1000);
+      esp_restart();
+    }
+    else if (command == "admingetdns") {
+      Serial.print("Adresa: http://");
+      Serial.print(preferences.getString("DNS", ""));
+      Serial.println(":81/");
+      delay(1000);
+    }
+    else if (command == "admingetwifidata") {
+      Serial.print("Adresa wifi: ");
+      Serial.println(preferences.getString("ssid", user_wifi.ssid));
+      Serial.print("Parola: ");
+      Serial.println(preferences.getString("password", user_wifi.password));
+      delay(1000);
+    }
+    else if (command == "clearEEPROM") {
+      Serial.println("Stergere memorie...");
+      preferences.clear();
+      delay(2000);
+      Serial.println("EEPROM sters! Restart in 5 secunde...");
+      delay(5000);
+      esp_restart();
+    }
+    else {
+      Serial.print("Comandă necunoscută.");
+    }
+  }
 }
 
 void handleGetIP() {
