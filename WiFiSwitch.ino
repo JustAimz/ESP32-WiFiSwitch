@@ -179,7 +179,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       esp_restart();
     }
     else if (command == "DNS") {
-      Serial.println(preferences.getString("DNS", user_wifi.dns));
+      Serial.println(preferences.getString("DNS", ""));
     }
   }
 }
@@ -200,13 +200,12 @@ void handlePortal() {
   if (server.method() == HTTP_POST) {
     strncpy(user_wifi.ssid, server.arg("ssid").c_str(), sizeof(user_wifi.ssid));
     strncpy(user_wifi.password, server.arg("password").c_str(), sizeof(user_wifi.password));
-    strncpy(user_wifi.dns, server.arg("DNS").c_str(), sizeof(user_wifi.dns));  // Nou câmp DNS
 
     user_wifi.ssid[server.arg("ssid").length()] = user_wifi.password[server.arg("password").length()] = user_wifi.dns[server.arg("DNS").length()] = '\0';
 
     preferences.putBytes("ssid", user_wifi.ssid, sizeof(user_wifi.ssid));
     preferences.putBytes("password", user_wifi.password, sizeof(user_wifi.password));
-    preferences.putBytes("DNS", user_wifi.dns, sizeof(user_wifi.dns));  // Salvează DNS-ul
+    preferences.putString("DNS", server.arg("DNS").c_str());  // Salvează DNS-ul
 
     server.send(200, "text/html", "<html><head><style>"
                                  "body { font-family: Arial, sans-serif; background-color: #f4f4f4; text-align: center; padding: 20px; }"
@@ -217,7 +216,11 @@ void handlePortal() {
                                  "button:hover { background-color: #45a049; }"
                                  "</style></head><body><h1>Wifi Setup</h1><p>Settings saved! Restarting device in 5 seconds.</p></body></html>");
     delay(5000);
-    Serial.print("Settings for WiFi and DNS are saved! RESTARTING!");
+    Serial.println("Settings for WiFi and DNS are saved! RESTARTING!");
+    Serial.print("Citit din pagina: ");
+    Serial.println(server.arg("DNS").c_str());
+    Serial.print("Citit din memorie: ");
+    Serial.println(preferences.getString("DNS", ""));
     delay(2000);
     esp_restart();
 } else {
