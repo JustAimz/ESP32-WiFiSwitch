@@ -18,6 +18,7 @@ const byte DNS_PORT = 53;
 IPAddress apIP(172, 217, 28, 1);
 DNSServer dnsServer;
 const char* redirectIP = "172.217.28.1";
+int beep;
 
 Preferences preferences;
 
@@ -45,25 +46,25 @@ void setup() {
     Serial.println(preferences.getString("ssid", user_wifi.ssid));
   }
   pinMode(BootLED, OUTPUT);
+  delay(100);
   digitalWrite(BootLED, HIGH);
-  delay(200);
-  digitalWrite(BootLED, LOW);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(user_wifi.ssid, user_wifi.password);
 
   if (preferences.getString("ssid", user_wifi.ssid) != NULL) {
-    delay(2000);
-    Serial.print("...");
-    delay(2000);
-    Serial.print("...");
-    delay(2000);
-    Serial.print("...");
-    delay(2000);
-    Serial.print("...");
-    delay(2000);
-    Serial.println("...");
-    delay(1000);
+    int bootcount;
+    while (bootcount < 6) {
+      if (bootcount < 5) {
+        Serial.print("...");
+        delay(2000);
+        bootcount += 1;
+      } else {
+        Serial.println("...");
+        delay(1000);
+        bootcount += 1;
+      }
+    }
   }
   if (WiFi.status() != WL_CONNECTED) {
     if (preferences.getString("ssid", user_wifi.ssid) != NULL){
@@ -77,29 +78,18 @@ void setup() {
     server.onNotFound(handleSetup);
     server.on("/", handlePortal);
     server.begin();
-    delay(200);
-    digitalWrite(BootLED, HIGH);
-    delay(100);
-    digitalWrite(BootLED, LOW);
-    delay(100);
-    digitalWrite(BootLED, HIGH);
-    delay(100);
-    digitalWrite(BootLED, LOW);
-    delay(100);
-    digitalWrite(BootLED, HIGH);
-    delay(100);
-    digitalWrite(BootLED, LOW);
-    delay(100);
-    digitalWrite(BootLED, HIGH);
-    delay(100);
-    digitalWrite(BootLED, LOW);
-    delay(100);
-    digitalWrite(BootLED, HIGH);
-    delay(100);
-    digitalWrite(BootLED, LOW);
-    delay(100);
-    digitalWrite(BootLED, HIGH);
-    delay(100);
+    while (beep < 10) {
+      pinMode(BootLED, OUTPUT);
+      if (digitalRead(BootLED) == LOW) {
+        digitalWrite(BootLED, HIGH);
+        delay(400);
+        beep += 1;
+      } else if (digitalRead(BootLED) == HIGH) {
+        digitalWrite(BootLED, LOW);
+        delay(400);
+        beep += 1;
+      }
+    }
     digitalWrite(BootLED, LOW);
 
     Serial.println("Please use WiFi \"SmartLink Outlet\" to setup device");
@@ -167,19 +157,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       Serial.println("Led turned off (WebSocket)");
       server.send(200, "text/html", "LED is OFF!");
     }
-    else if (command == "clearEEPROM") {
-      preferences.clear();
-      delay(2000);
-      server.send(200, "text/html", "EEPROM CLEARED!");
-      Serial.println("EEPROM Cleared! Restarting...");
-      delay(5000);
-      esp_restart();
-    }
     else if (command == "reboot") {
       esp_restart();
     }
     else if (command == "DNS") {
-      Serial.println(preferences.getString("DNS", ""));
+      Serial.print("http://");
+      Serial.print(preferences.getString("DNS", ""));
+      Serial.println(".local"); 
     }
   }
 }
