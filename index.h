@@ -75,12 +75,15 @@ const char MAIN_page[] PROGMEM = R"=====(
 <body>
 
 <div class="card">
-  <h2>LED Enable/Disable</h2>
-  <h3>Status LED: <span id="ADCValue">0</span></h3>
+  <h2>Panou Control</h2>
+  <h3>Status: <span id="ADCValue">Oprit</span></h3>
   
   <div class="btn-container">
-    <button onclick='sendCommand("led-on")'>LED ON</button>
-    <button onclick='sendCommand("led-off")'>LED OFF</button>
+    <button onclick='sendCommand("led-on")'>Aprinde</button>
+    <button onclick='sendCommand("led-off")'>Stinge</button>
+  </div>
+  <div>
+    <button onclick='sendCommand("reboot")'>Restart device</button>
   </div>
 </div>
 

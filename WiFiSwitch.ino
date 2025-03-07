@@ -94,6 +94,7 @@ void setup() {
     digitalWrite(BootLED, LOW);
 
     Serial.println("Please use WiFi \"SmartLink Outlet\" to setup device");
+    server.on("/scan", HTTP_GET, handleWiFiScan);
   } else {
     Serial.print("Connected to WiFi network with IP Address: ");
     Serial.println(WiFi.localIP());
@@ -103,7 +104,10 @@ void setup() {
       Serial.println("Eroare la inițializarea mDNS");
       return;
       }
-      Serial.println("mDNS inițializat");
+      Serial.print("mDNS inițializat cu numele ");
+      Serial.print("http://");
+      Serial.print(preferences.getString("DNS", ""));
+      Serial.println(".local"); 
     }
     digitalWrite(BootLED, HIGH);
 
@@ -214,6 +218,19 @@ void loop() {
       Serial.print("Comandă necunoscută.");
     }
   }
+}
+
+void handleWiFiScan() {
+    String json = "[";
+    int n = WiFi.scanNetworks();
+    
+    for (int i = 0; i < n; ++i) {
+        if (i > 0) json += ",";
+        json += "\"" + WiFi.SSID(i) + "\"";
+    }
+    json += "]";
+
+    server.send(200, "application/json", json);
 }
 
 void handleGetIP() {
