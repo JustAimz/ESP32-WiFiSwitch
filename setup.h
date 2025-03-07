@@ -40,55 +40,71 @@ const char SETUP_page[] PROGMEM = R"=====(
         button:hover {
             background-color: #45a049;
         }
-        .message {
+        #refreshMessage {
             font-size: 14px;
-            color: #777;
+            color: #666;
+            margin-top: 10px;
+        }
+        hr {
+            border: 0;
+            height: 2px;
+            background: #ccc;
+            margin: 10px 0;
         }
     </style>
     <script>
-        let selectedSSID = "";
-
-        // Function to load networks and keep the selection intact
         function loadNetworks() {
+            let ssidSelect = document.getElementById("ssid");
+            let selectedSSID = ssidSelect.value || localStorage.getItem("selectedSSID"); // Păstrează SSID-ul ales
+
             fetch('/scan')
             .then(response => response.json())
             .then(data => {
-                let ssidSelect = document.getElementById("ssid");
-                let currentSelection = ssidSelect.value;
-                
-                // Clear the existing options
-                ssidSelect.innerHTML = "";
+                ssidSelect.innerHTML = ""; // Curăță lista
 
-                // Add the new SSID options
+                if (selectedSSID) {
+                    let selectedOption = document.createElement("option");
+                    selectedOption.value = selectedSSID;
+                    selectedOption.textContent = selectedSSID + " (selectat)";
+                    selectedOption.selected = true;
+                    ssidSelect.appendChild(selectedOption);
+
+                    let separator = document.createElement("option");
+                    separator.disabled = true;
+                    separator.textContent = "──────────";
+                    ssidSelect.appendChild(separator);
+                }
+
                 data.forEach(ssid => {
-                    let option = document.createElement("option");
-                    option.value = ssid;
-                    option.textContent = ssid;
-
-                    // Keep the previous selection if it exists in the list
-                    if (ssid === currentSelection) {
-                        option.selected = true;
+                    if (ssid !== selectedSSID) {
+                        let option = document.createElement("option");
+                        option.value = ssid;
+                        option.textContent = ssid;
+                        ssidSelect.appendChild(option);
                     }
-                    ssidSelect.appendChild(option);
                 });
             })
             .catch(error => console.error("Error loading networks:", error));
         }
 
-        // Reload the list every 10 seconds
-        setInterval(() => {
+        window.onload = function() {
             loadNetworks();
-        }, 10000);
+            setInterval(loadNetworks, 10000); // Actualizează la fiecare 10 secunde
+        };
 
-        // Load networks initially when the page loads
-        window.onload = loadNetworks;
+        function saveSelectedSSID() {
+            let selectedSSID = document.getElementById("ssid").value;
+            localStorage.setItem("selectedSSID", selectedSSID);
+        }
     </script>
 </head>
 <body>
     <h1>WiFi Setup</h1>
-    <form action="/" method="post">
-        <label for="ssid">WiFi:</label>
-        <select id="ssid" name="ssid"></select><br>
+    <form action="/" method="post" onsubmit="saveSelectedSSID()">
+        <label for="ssid">Conectare WiFi:</label>
+        <select id="ssid" name="ssid">
+            %NETWORK_LIST%
+        </select><br>
         
         <label for="password">Parola:</label>
         <input type="password" id="password" name="password"><br>
@@ -96,11 +112,10 @@ const char SETUP_page[] PROGMEM = R"=====(
         <label for="dns">Nume:</label>
         <input type="text" id="dns" name="DNS"><br>
         
-        <button type="submit">Salveaza</button>
+        <button type="submit">Salvare</button>
     </form>
     <p class="message">Lista de retele WiFi se actualizeaza odata la 10 secunde.</p>
     <p class="message">Daca nu vezi WiFi-ul tau mai asteapta putin.</p>
-    <br></br>
     <p class="message">Numele dispozitivului va fi numele cu care il vei accesa</p>
     <p class="message">Adica de ex: Numele "smartlink" va deveni "http://smartlink.local"</p>
 </body>

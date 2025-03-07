@@ -42,6 +42,7 @@ void setup() {
   preferences.getBytes("password", user_wifi.password, sizeof(user_wifi.password));
 
   Serial.println("Booting...");
+  delay(2000);
   if (preferences.getString("ssid", user_wifi.ssid) != NULL) {
     Serial.print("Connecting to: ");
     Serial.println(preferences.getString("ssid", user_wifi.ssid));
@@ -55,13 +56,17 @@ void setup() {
 
   if (preferences.getString("ssid", user_wifi.ssid) != NULL) {
     int bootcount;
-    while (bootcount < 6) {
-      if (bootcount < 5) {
+    while (bootcount < 7) {
+      if (bootcount < 6) {
         Serial.print("...");
         delay(2000);
         bootcount += 1;
       } else {
-        Serial.println("...");
+        if (WiFi.status() != WL_CONNECTED) {
+          Serial.println(" Failed");
+        } else if (WiFi.status() == WL_CONNECTED) {
+          Serial.println(" Connected");
+        }
         delay(1000);
         bootcount += 1;
       }
@@ -233,6 +238,17 @@ void handleWiFiScan() {
     server.send(200, "application/json", json);
 }
 
+String generateNetworkList() {
+    String networkOptions = "";
+    int numNetworks = WiFi.scanNetworks();
+    
+    for (int i = 0; i < numNetworks; i++) {
+        networkOptions += "<option value='" + WiFi.SSID(i) + "'>" + WiFi.SSID(i) + "</option>\n";
+    }
+
+    return networkOptions;
+}
+
 void handleGetIP() {
     server.send(200, "text/plain", WiFi.localIP().toString());
 }
@@ -259,7 +275,8 @@ void handlePortal() {
     delay(2000);
     esp_restart();
 } else {
-    String d = SETUP_page;
-    server.send(200, "text/html", d);
+    String page = SETUP_page;
+    page.replace("%NETWORK_LIST%", generateNetworkList());
+    server.send(200, "text/html", page);
 }
 }
