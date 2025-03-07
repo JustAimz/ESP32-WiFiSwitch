@@ -6,6 +6,7 @@
 #include <WebSocketsServer.h>
 #include <LiquidCrystal.h>
 #include "index.h"
+#include "setup.h"
 
 #define ExtLED 3  // Use a valid GPIO for ESP32-C3
 #define BootLED 8
@@ -171,6 +172,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 void loop() {
   if (WiFi.status() != WL_CONNECTED) {
     dnsServer.processNextRequest();
+    delay(2000);
   }
   server.handleClient();
   webSocket.loop();
@@ -229,14 +231,8 @@ void handlePortal() {
     preferences.putBytes("password", user_wifi.password, sizeof(user_wifi.password));
     preferences.putString("DNS", server.arg("DNS").c_str());  // Salvează DNS-ul
 
-    server.send(200, "text/html", "<html><head><style>"
-                                 "body { font-family: Arial, sans-serif; background-color: #f4f4f4; text-align: center; padding: 20px; }"
-                                 "h1 { color: #333; }"
-                                 "form { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); display: inline-block; }"
-                                 "input[type='text'], input[type='password'], input[type='text'] { width: 250px; padding: 8px; margin: 10px 0; border-radius: 4px; border: 1px solid #ccc; }"
-                                 "button { padding: 10px 20px; border-radius: 5px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }"
-                                 "button:hover { background-color: #45a049; }"
-                                 "</style></head><body><h1>Wifi Setup</h1><p>Settings saved! Restarting device in 5 seconds.</p></body></html>");
+    String d = SETUP_success;
+    server.send(200, "text/html", SETUP_success);
     delay(5000);
     Serial.println("Settings for WiFi and DNS are saved! RESTARTING!");
     Serial.print("Citit din pagina: ");
@@ -246,19 +242,7 @@ void handlePortal() {
     delay(2000);
     esp_restart();
 } else {
-    server.send(200, "text/html", "<html><head><style>"
-                                 "body { font-family: Arial, sans-serif; background-color: #f4f4f4; text-align: center; padding: 20px; }"
-                                 "h1 { color: #333; }"
-                                 "form { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); display: inline-block; }"
-                                 "input[type='text'], input[type='password'], input[type='text'] { width: 250px; padding: 8px; margin: 10px 0; border-radius: 4px; border: 1px solid #ccc; }"
-                                 "button { padding: 10px 20px; border-radius: 5px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }"
-                                 "button:hover { background-color: #45a049; }"
-                                 "</style></head><body><h1>Wifi Setup</h1>"
-                                 "<form action='/' method='post'>"
-                                 "WiFi Name: <input type='text' name='ssid'><br>"
-                                 "Password: <input type='password' name='password'><br>"
-                                 "DNS: <input type='text' name='DNS'><br>"
-                                 "<button type='submit'>Save</button>"
-                                 "</form></body></html>");
+    String d = SETUP_page;
+    server.send(200, "text/html", d);
 }
 }
